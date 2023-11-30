@@ -1,6 +1,8 @@
 # ftool
 a simple frida tool for mac
 
+工具目前只适用在macos上使用，目前存在或多或少的小问题，只作为调试使用，输出内容建议结合生成的log文件查看。
+
 ## 0x01 使用方法
 
 `python/python3 ftool.py`
@@ -28,3 +30,8 @@ Frida操作命令
 - `execf:<js_file>`对frida客户端进行执行指定文件中的js代码
 
 ![iShot_2023-11-30_11.29.10](assets/iShot_2023-11-30_11.29.10.gif)
+
+## 0x03 已知问题
+
+- 显示区域无法使用滚轮
+- 显示内容过宽无法自动换行
