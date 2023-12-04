@@ -201,12 +201,12 @@ class CustomForm(npyscreen.FormMutt):
                 index += 1
 
         # Update the display based on scroll position
-        if scroll or force:
+        if scroll and force:
             if self.scroll_position > len(HISTORY) - (self.max_height - 2):
                 self.scroll_position = max(0, len(HISTORY) - (self.max_height - 2))
             displayed_history = HISTORY[self.scroll_position:self.scroll_position + self.max_height - 2]
         else:
-            if len(HISTORY) >= self.max_height - 2:
+            if len(HISTORY) >= self.max_height - 2 and force == False:
                 self.show_line_index = len(HISTORY) - (self.max_height - 2)
             displayed_history = HISTORY[self.show_line_index:]
 
