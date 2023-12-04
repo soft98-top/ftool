@@ -20,6 +20,8 @@ a simple frida tool for mac
 - `t`开头
 - `b`结尾
 - `exit`退出
+- `PageUP`按键，上一页
+- `PageDOWN`按键，下一页
 
 Frida操作命令
 

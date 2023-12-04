@@ -105,6 +105,7 @@ class CustomForm(npyscreen.FormMutt):
     def create(self):
         self.max_height = self.lines - 6
         self.show_line_index = 0
+        self.scroll_position = 0
         # 显示部分
         self.output = self.add(npyscreen.BoxTitle, name="Output",max_height=self.max_height)
 
@@ -113,6 +114,13 @@ class CustomForm(npyscreen.FormMutt):
         self.command_input = self.add(npyscreen.Textfield, rely=-2)
         self.command_input.editable = True  # Ensure the input is editable
         
+        self.add_handlers({
+            # curses.KEY_UP: self.h_scroll_line_up,
+            # curses.KEY_DOWN: self.h_scroll_line_down,
+            curses.KEY_PPAGE: self.h_scroll_page_up,    # Page Up
+            curses.KEY_NPAGE: self.h_scroll_page_down,  # Page Down
+        })
+        
     def resize(self):
         # 在这里进行控件的重新布局或其他必要的调整
         # 在这里进行控件的重新布局或其他必要的调整
@@ -120,6 +128,12 @@ class CustomForm(npyscreen.FormMutt):
         self.output.max_height = self.max_height  # 设置 BoxTitle 控件的 max_height
         self.command_input.rely = self.lines - 2  # 重新定位输入框
         self.output_console("")
+        
+    def adjust_scroll(self, scroll_change):
+        # Adjust the scroll position and ensure it stays within valid range
+        self.scroll_position += scroll_change
+        self.scroll_position = max(0, min(self.scroll_position, len(HISTORY) - self.max_height + 2))
+        self.output_console("", force=True)
 
     def process_command(self, command_text:str):
         global CMD_CENTER,CURRENT
@@ -173,29 +187,46 @@ class CustomForm(npyscreen.FormMutt):
                     self.output_console(ex)
         if command == "exit":
             os._exit(0)
-    
-    def output_console(self, output_text, force=False):
-        global HISTORY,LOCK1
+        
+    def output_console(self, output_text, force=False, scroll=False):
+        global HISTORY, LOCK1
         LOCK1.acquire()
         output_texts = output_text.split("\n")
         index = len(HISTORY) + 1
         for text in output_texts:
-            if text.replace(" ","") != "" :
+            if text.strip() != "":  # Using strip() to check for non-empty lines
                 out_str = f"[{index}] {text}"
                 logger.info(out_str)
                 HISTORY.append(out_str)
-                index = index + 1
-        if force == False:
-            if len(HISTORY) >= int(self.output.max_height - 2):
-                self.show_line_index = len(HISTORY) - int(self.output.max_height - 2)
-        if self.show_line_index >= len(HISTORY):
-            out_value = []
+                index += 1
+
+        # Update the display based on scroll position
+        if scroll or force:
+            if self.scroll_position > len(HISTORY) - (self.max_height - 2):
+                self.scroll_position = max(0, len(HISTORY) - (self.max_height - 2))
+            displayed_history = HISTORY[self.scroll_position:self.scroll_position + self.max_height - 2]
         else:
-            out_value = HISTORY[self.show_line_index:]
-        self.output.values = out_value
+            if len(HISTORY) >= self.max_height - 2:
+                self.show_line_index = len(HISTORY) - (self.max_height - 2)
+            displayed_history = HISTORY[self.show_line_index:]
+
+        self.output.values = displayed_history
         self.output.display()  # Refresh the output
         LOCK1.release()
 
+    # Handler methods for scrolling
+    def h_scroll_line_up(self, _input):
+        self.adjust_scroll(-1)
+
+    def h_scroll_line_down(self, _input):
+        self.adjust_scroll(1)
+
+    def h_scroll_page_up(self, _input):
+        self.adjust_scroll(-self.max_height+2)
+
+    def h_scroll_page_down(self, _input):
+        self.adjust_scroll(self.max_height-2)
+            
 def main(stdscr):
     # 初始化 npyscreen
     app = npyscreen.NPSAppManaged()
