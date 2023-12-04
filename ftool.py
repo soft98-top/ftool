@@ -184,7 +184,7 @@ class CustomForm(npyscreen.FormMutt):
                     cmd_code = open(command_parse[1],'r').read()
                     CMD_CENTER[client_id] = cmd_code
                 except Exception as ex:
-                    self.output_console(ex)
+                    self.output_console(str(ex))
         if command == "exit":
             os._exit(0)
         
