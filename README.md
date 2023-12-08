@@ -15,11 +15,11 @@ a simple frida tool for mac
 
 显示相关基础命令
 
-- `n`上一个
-- `m`下一个
 - `t`开头
 - `b`结尾
 - `exit`退出
+- `⬆up`上一个
+- `⬇down`下一个
 - `PageUP`按键，上一页
 - `PageDOWN`按键，下一页
 
