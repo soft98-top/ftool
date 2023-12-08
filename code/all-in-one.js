@@ -2,8 +2,8 @@
  * all-in-one 包含所有常用函数
  * 作者：Soft98
  * 日期：2023-04-03
- * Update： 2023-11-29
- * 版本：1.0.2
+ * Update： 2023-12-08
+ * 版本：1.0.3
  */
 
 const obj_enum = {
@@ -23,7 +23,7 @@ const obj_enum = {
     /**
      * 枚举模块
      */
-    enumMoudles:function () {
+    enumModules:function () {
         // 枚举模块
         var modules = Process.enumerateModules();
         for (var i = 0; i < modules.length; i++) {
