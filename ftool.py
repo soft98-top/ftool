@@ -1,14 +1,13 @@
-import npyscreen
-import curses
+import urwid
+import os
 import logging
-import frida
 import threading
 import re
-import os
 import time
 import uuid
 import json
 import sys
+import frida
 
 # Configuring logger to write to a file
 logging.basicConfig(level=logging.INFO, filename=f'ftool-{time.time()}.log', filemode='w',
@@ -23,7 +22,9 @@ if os.path.basename(sys.executable) in ['python.exe', 'python3.exe', 'python', '
 JSPATH = BASE_PATH + "code/all-in-one.js"
 CMD_CENTER = {}
 CURRENT = ""
-HISTORY = []
+TOTAL_HISTORY = urwid.SimpleListWalker([])
+HISTORY = urwid.SimpleListWalker([])
+OUTPUT = urwid.SimpleListWalker([])
 LOCK1 = threading.Lock()
 
 class FridaCLient():
@@ -101,64 +102,80 @@ class FridaCLient():
         CMD_CENTER.pop(script_uuid)
         self.out.output_console(f"{script_uuid} done.")
 
-class CustomForm(npyscreen.FormMutt):
-    def create(self):
-        self.max_height = self.lines - 6
-        self.show_line_index = 0
-        self.scroll_position = 0
-        # 显示部分
-        self.output = self.add(npyscreen.BoxTitle, name="Output",max_height=self.max_height)
+class FToolUrwid:
+    def __init__(self):
+        global OUTPUT
+        self.output_widget = OUTPUT
+        self.output_listbox = urwid.ListBox(self.output_widget)
+        self.out_index = 0
+        # 取当前屏幕的高度
+        self.max_out = os.get_terminal_size().lines - 3
+        self.scrollable_output = urwid.LineBox(self.output_listbox, title="Output", title_align="left")
+        self.input_edit = urwid.Edit(caption="Command: ")
+        self.frame = urwid.Frame(body=self.scrollable_output, footer=self.input_edit)
+        self.loop = urwid.MainLoop(self.frame, unhandled_input=self.handle_input)
 
-        # 底部命令输入
-        self.add(npyscreen.FixedText, value="Enter Command:", rely=-3, editable=False)
-        self.command_input = self.add(npyscreen.Textfield, rely=-2)
-        self.command_input.editable = True  # Ensure the input is editable
-        
-        self.add_handlers({
-            # curses.KEY_UP: self.h_scroll_line_up,
-            # curses.KEY_DOWN: self.h_scroll_line_down,
-            curses.KEY_PPAGE: self.h_scroll_page_up,    # Page Up
-            curses.KEY_NPAGE: self.h_scroll_page_down,  # Page Down
-        })
-        
-    def resize(self):
-        # 在这里进行控件的重新布局或其他必要的调整
-        # 在这里进行控件的重新布局或其他必要的调整
-        self.max_height = self.lines - 6  # 自定义计算max_height，可根据需要调整
-        self.output.max_height = self.max_height  # 设置 BoxTitle 控件的 max_height
-        self.command_input.rely = self.lines - 2  # 重新定位输入框
-        self.output_console("")
-        
-    def adjust_scroll(self, scroll_change):
-        # Adjust the scroll position and ensure it stays within valid range
-        self.scroll_position += scroll_change
-        self.scroll_position = max(0, min(self.scroll_position, len(HISTORY) - self.max_height + 2))
-        self.output_console("", force=True)
+    def handle_input(self, key):
+        global HISTORY
+        self.max_out = os.get_terminal_size().lines - 3
+        # self.output_console(f"Input: {key}")  # Logging command input
+        if key == 'enter':
+            command = self.input_edit.edit_text.strip()
+            if command == "":
+                # 输入框聚焦
+                self.frame.focus_position = 'footer'
+                return
+            self.execute_command(command)
+            self.input_edit.edit_text = ""
+        # 如果是滚轮向上滚动或鼠标滚轮向上滚动
+        elif key == 'up':
+            out_index = self.out_index
+            if out_index > 0:
+                self.out_index = out_index - 1
+                self.output_widget[:] = HISTORY[self.out_index:]
+        # 如果是滚轮向下滚动或鼠标滚轮向下滚动
+        elif key == 'down':
+            out_index = self.out_index
+            if out_index < len(HISTORY) - self.max_out:
+                self.out_index = out_index + 1
+                self.output_widget[:] = HISTORY[self.out_index:]
+        # 如果是Page Up
+        elif key == 'page up':
+            out_index = self.out_index
+            self.out_index = out_index - self.max_out
+            if self.out_index < 0:
+                self.out_index = 0
+            self.output_widget[:] = HISTORY[self.out_index:]
+        # 如果是Page Down
+        elif key == 'page down':
+            out_index = self.out_index
+            if out_index < len(HISTORY) - self.max_out:
+                self.out_index = out_index + self.max_out
+                if self.out_index > len(HISTORY) - self.max_out:
+                    self.out_index = len(HISTORY) - self.max_out
+                self.output_widget[:] = HISTORY[self.out_index:]
 
-    def process_command(self, command_text:str):
-        global CMD_CENTER,CURRENT
+    def execute_command(self, command_text):
+        global CMD_CENTER,CURRENT,HISTORY
         command_parse = command_text.split(":")
         command = command_parse[0]
-        basic_cmd = ['n','m','t','b']
+        basic_cmd = ['t','b','clear']
         if command not in basic_cmd:
-            self.output_console(f"Command entered: {command_text}")  # Logging command input
+            self.output_console(f"Command: {command_text}")  # Logging command input
         if command in basic_cmd:
-            if command_text == "n":
-                if self.show_line_index > 0:
-                    self.show_line_index = self.show_line_index - 1
-            if command_text == "m":
-                if self.show_line_index < len(HISTORY):
-                    self.show_line_index = self.show_line_index + 1
+            out_index = self.out_index
             if command_text == "t":
-                self.show_line_index = 0
+                self.out_index = 0
             if command_text == "b":
-                self.show_line_index = len(HISTORY) - int(self.output.max_height - 2)
-            # if command == "clear":
-            #     self.show_line_index = len(HISTORY)
-            self.output_console("",force=True) 
+                self.out_index = len(HISTORY) - self.max_out
+            if command == "clear":
+                self.out_index = 0
+                HISTORY.clear()
+            if out_index != self.out_index or command == "clear":
+                self.output_widget[:] = HISTORY[self.out_index:]
         if command == "hook":
-            args = command_parse[1].split(",")
-            frida_client = FridaCLient(args[0],False,True,self)
+            args = command_parse[1]
+            frida_client = FridaCLient(args,False,True,self)
             threading.Thread(target=frida_client.start).start()
         if command == "list":
             output_text = json.dumps(CMD_CENTER)
@@ -188,60 +205,27 @@ class CustomForm(npyscreen.FormMutt):
         if command == "exit":
             os._exit(0)
         
-    def output_console(self, output_text, force=False, scroll=False):
-        global HISTORY, LOCK1
+
+    def output_console(self, output_text):
+        global HISTORY,TOTAL_HISTORY,LOCK1
         LOCK1.acquire()
         output_texts = output_text.split("\n")
-        index = len(HISTORY) + 1
         for text in output_texts:
-            if text.strip() != "":  # Using strip() to check for non-empty lines
-                out_str = f"[{index}] {text}"
-                logger.info(out_str)
-                HISTORY.append(out_str)
-                index += 1
-
-        # Update the display based on scroll position
-        if scroll and force:
-            if self.scroll_position > len(HISTORY) - (self.max_height - 2):
-                self.scroll_position = max(0, len(HISTORY) - (self.max_height - 2))
-            displayed_history = HISTORY[self.scroll_position:self.scroll_position + self.max_height - 2]
-        else:
-            if len(HISTORY) >= self.max_height - 2 and force == False:
-                self.show_line_index = len(HISTORY) - (self.max_height - 2)
-            displayed_history = HISTORY[self.show_line_index:]
-
-        self.output.values = displayed_history
-        self.output.display()  # Refresh the output
+            if text.strip() != "":
+                HISTORY.append(urwid.Text(f'[{len(HISTORY) + 1}] {text}'))
+                log_str = f'[{len(TOTAL_HISTORY) + 1}] {text}'
+                TOTAL_HISTORY.append(urwid.Text(log_str))
+                logger.info(log_str)
+        if len(HISTORY) > self.max_out:
+            self.out_index = len(HISTORY) - self.max_out
+        self.output_widget[:] = HISTORY[self.out_index:]
         LOCK1.release()
+        # 刷新显示
+        self.loop.draw_screen()
 
-    # Handler methods for scrolling
-    def h_scroll_line_up(self, _input):
-        self.adjust_scroll(-1)
+    def run(self):
+        self.loop.run()
 
-    def h_scroll_line_down(self, _input):
-        self.adjust_scroll(1)
-
-    def h_scroll_page_up(self, _input):
-        self.adjust_scroll(-self.max_height+2)
-
-    def h_scroll_page_down(self, _input):
-        self.adjust_scroll(self.max_height-2)
-            
-def main(stdscr):
-    # 初始化 npyscreen
-    app = npyscreen.NPSAppManaged()
-    form = CustomForm()
-    while True:
-        # 监听键盘输入
-        form.display()
-        form.command_input.edit()
-        command_text = form.command_input.value
-        form.process_command(command_text)
-        form.command_input.value = ''  # Clear input field after processing command
-        form.command_input.update()  # Update the input field
-
-def run_app():
-    curses.wrapper(main)
-
-if __name__ == "__main__":
-    run_app()
+if __name__ == '__main__':
+    ftool_urwid = FToolUrwid()
+    ftool_urwid.run()
