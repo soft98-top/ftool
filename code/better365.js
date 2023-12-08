@@ -1,4 +1,4 @@
-let func_better365 = function () {
+let better365_crack = function () {
     let json_data = {
         "status":0,
         "receipt":{
@@ -14,7 +14,4 @@ let func_better365 = function () {
     let crack_data = obj.util.jsonToObjc(json_data)
     retval.replace(crack_data);
 }
-let crack_better365 = {
-    "onLeave": obj.util.funcToString(func_better365)
-} 
-obj.method.hookMethod("NSJSONSerialization","+ JSONObjectWithData:options:error:",crack_better365);
+obj.method.hookMethod("NSJSONSerialization","+ JSONObjectWithData:options:error:",{"onLeave":obj.util.funcToString(func_better365)});
