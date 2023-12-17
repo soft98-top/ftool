@@ -29,11 +29,12 @@ LOCK1 = threading.Lock()
 
 class FridaCLient():
 
-    def __init__(self,target,repeat=False,auto=False,out=None):
+    def __init__(self,target,repeat=False,auto=False,out=None,init_script=None):
         self.target = target
         self.repeat = repeat
         self.auto = auto
         self.out = out
+        self.init_script = init_script
     
     def open_app(self):
         if type(self.target) == str:
@@ -88,6 +89,9 @@ class FridaCLient():
         script.load()
         script_uuid = str(uuid.uuid1())
         self.out.output_console(f'Hook进程成功({str(target)})({script_uuid})')
+        if self.init_script != None:
+            init_script_data = open(self.init_script,'r',encoding='utf-8').read()
+            script.post(init_script_data)
         CMD_CENTER[script_uuid] = ""
         CURRENT = script_uuid
         while True and session.is_detached == False:
@@ -174,8 +178,12 @@ class FToolUrwid:
             if out_index != self.out_index or command == "clear":
                 self.output_widget[:] = HISTORY[self.out_index:]
         if command == "hook":
-            args = command_parse[1]
-            frida_client = FridaCLient(args,False,True,self)
+            args = command_parse[1].split(",")
+            app_name = args[0]
+            init_script = None
+            if len(args) > 1:
+                init_script = args[1]
+            frida_client = FridaCLient(app_name,False,True,self,init_script)
             threading.Thread(target=frida_client.start).start()
         if command == "list":
             output_text = json.dumps(CMD_CENTER)

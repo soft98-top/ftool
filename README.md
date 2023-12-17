@@ -26,6 +26,7 @@ a simple frida tool for mac
 Frida操作命令
 
 - `hook:<target>`frida附加进程，`target`可以是应用名或者pid
+    - 可以用在输入target的同时用逗号拼接初始化js文件，便于在hook的第一时间执行，例如`hook:Typora,/Users/soft98/ftool/code/typora.js`
 - `list`列举当前附加的frida客户端
 - `set:<client_id>`设置当前命令执行客户端，client_id可以通过`list`获取
 - `exec:<cmd>`对当前frida客户端进行执行js代码，如果cmd为`exit`，frida客户端会退出
