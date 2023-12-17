@@ -1,2 +1,3 @@
 # 实现命令行界面
 urwid
+frida-tools
