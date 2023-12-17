@@ -1,0 +1,19 @@
+{
+    "exec": [
+        "obj.enum.enumMethods(className)",
+        "obj.enum.enumModules()",
+        "obj.enum.enumExports(moduleName)",
+        "obj.enum.enumImports(moduleName)",
+        "obj.method.getMethodInfo(className, methodName)",
+        "obj.method.invokeMethod(className, methodName)",
+        "obj.method.invokeMethodWithArgs(className, methodName, ...args)",
+        "obj.method.invokeMethodChain(className, mustMethod, ...methodNames)",
+        "obj.method.getFuncAddr(module, offset)",
+        "obj.method.getMethodInfoByOffset(moduleName, offset)",
+        "obj.method.hookMethod(className, methodName, cmds)",
+        "obj.method.hookMethodByOffset(moduleName, offset, cmds)",
+        "obj.method.getAllMethodsInfo(className)",
+        "obj.util.jsonToObjc(data)",
+        "obj.util.funcToString(func)"
+    ]
+}

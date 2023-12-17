@@ -8,6 +8,7 @@ import uuid
 import json
 import sys
 import frida
+import difflib
 
 # Configuring logger to write to a file
 logging.basicConfig(level=logging.INFO, filename=f'ftool-{time.time()}.log', filemode='w',
@@ -26,6 +27,9 @@ TOTAL_HISTORY = urwid.SimpleListWalker([])
 HISTORY = urwid.SimpleListWalker([])
 OUTPUT = urwid.SimpleListWalker([])
 LOCK1 = threading.Lock()
+CURRENT_CMD = ""
+AUTO_JSON = BASE_PATH + "auto.json"
+AUTO_DATA = {}
 
 class FridaCLient():
 
@@ -158,12 +162,41 @@ class FToolUrwid:
                 if self.out_index > len(HISTORY) - self.max_out:
                     self.out_index = len(HISTORY) - self.max_out
                 self.output_widget[:] = HISTORY[self.out_index:]
+        elif key == 'tab':
+            input = self.input_edit.edit_text.strip()
+            self.autocomplete_command(input)
+    
+    def autocomplete_command(self, input):
+        if CURRENT_CMD == "":
+            return
+        options = AUTO_DATA.get(CURRENT_CMD,[])
+        if len(options) == 0:
+            return
+        # matches = difflib.get_close_matches(input, options, cutoff=0.3, n=len(options))
+        matches = [cmd for cmd in options if cmd.startswith(input)]
+        if len(matches) == 1:
+            self.input_edit.edit_text = matches[0]
+            # 光标移动到最后
+            self.input_edit.set_edit_pos(len(common_prefix))
+        elif len(matches) > 1:
+            common_prefix = os.path.commonprefix(matches)
+            if common_prefix:
+                if common_prefix == input:
+                    self.output_console("\n".join(matches))
+                    return
+                self.input_edit.edit_text = common_prefix
+                # 光标移动到最后
+                self.input_edit.set_edit_pos(len(common_prefix))
 
     def execute_command(self, command_text):
         global CMD_CENTER,CURRENT,HISTORY
         command_parse = command_text.split(":")
         command = command_parse[0]
+        command_args = ""
+        if len(command_parse) > 1:
+            command_args = command_parse[1]
         basic_cmd = ['t','b','clear']
+        special_cmd = ['hook','set','exec','execf']
         if command not in basic_cmd:
             self.output_console(f"Command: {command_text}")  # Logging command input
         if command in basic_cmd:
@@ -177,41 +210,48 @@ class FToolUrwid:
                 HISTORY.clear()
             if out_index != self.out_index or command == "clear":
                 self.output_widget[:] = HISTORY[self.out_index:]
-        if command == "hook":
-            args = command_parse[1].split(",")
-            app_name = args[0]
-            init_script = None
-            if len(args) > 1:
-                init_script = args[1]
-            frida_client = FridaCLient(app_name,False,True,self,init_script)
-            threading.Thread(target=frida_client.start).start()
-        if command == "list":
+        elif command == "list":
             output_text = json.dumps(CMD_CENTER)
             self.output_console(output_text)
-        if command == "set":
-            client_id = command_parse[1]
-            if CMD_CENTER.get(client_id,None) == None:
-                self.output_console("frida client not found.")
-            else:
-                CURRENT = client_id
-        if command == "exec":
-            if CURRENT == "" or CMD_CENTER.get(CURRENT,None) == None:
-                self.output_console("frida client not set.")
-            else:
-                client_id = CURRENT
-                CMD_CENTER[client_id] = command_parse[1]
-        if command == "execf":
-            if CURRENT == "" or CMD_CENTER.get(CURRENT,None) == None:
-                self.output_console("frida client not set.")
-            else:
-                client_id = CURRENT
-                try:
-                    cmd_code = open(command_parse[1],'r').read()
-                    CMD_CENTER[client_id] = cmd_code
-                except Exception as ex:
-                    self.output_console(str(ex))
-        if command == "exit":
+        elif command == "exit":
             os._exit(0)
+        elif command in special_cmd and command_args == "":
+            self.change_cmd(command)
+            return
+        else:
+            if command_args == "":
+                command = CURRENT_CMD
+                command_args = command_text
+            if command == "hook":
+                args = command_args.split(",")
+                app_name = args[0]
+                init_script = None
+                if len(args) > 1:
+                    init_script = args[1]
+                frida_client = FridaCLient(app_name,False,True,self,init_script)
+                threading.Thread(target=frida_client.start).start()
+            elif command == "set":
+                client_id = command_args
+                if CMD_CENTER.get(client_id,None) == None:
+                    self.output_console("frida client not found.")
+                else:
+                    CURRENT = client_id
+            elif command == "exec":
+                if CURRENT == "" or CMD_CENTER.get(CURRENT,None) == None:
+                    self.output_console("frida client not set.")
+                else:
+                    client_id = CURRENT
+                    CMD_CENTER[client_id] = command_args
+            elif command == "execf":
+                if CURRENT == "" or CMD_CENTER.get(CURRENT,None) == None:
+                    self.output_console("frida client not set.")
+                else:
+                    client_id = CURRENT
+                    try:
+                        cmd_code = open(command_args,'r').read()
+                        CMD_CENTER[client_id] = cmd_code
+                    except Exception as ex:
+                        self.output_console(str(ex))
         
 
     def output_console(self, output_text):
@@ -230,10 +270,23 @@ class FToolUrwid:
         LOCK1.release()
         # 刷新显示
         self.loop.draw_screen()
+    
+    def change_cmd(self, cmd:str):
+        global CURRENT_CMD
+        CURRENT_CMD = cmd
+        caption = "Command: "
+        if cmd != "":
+            caption = f"Command({cmd}): "
+        # 修改caption
+        self.input_edit.set_caption(caption)
 
     def run(self):
         self.loop.run()
 
 if __name__ == '__main__':
     ftool_urwid = FToolUrwid()
+    try:
+        AUTO_DATA = json.loads(open(AUTO_JSON,'r').read())
+    except:
+        AUTO_DATA = {}
     ftool_urwid.run()
