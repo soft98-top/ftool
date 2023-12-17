@@ -3,7 +3,7 @@
  * 作者：Soft98
  * 日期：2023-04-03
  * Update： 2023-12-08
- * 版本：1.0.3
+ * 版本：1.0.4
  */
 
 const obj_enum = {
@@ -259,7 +259,7 @@ const obj_method = {
      */
     hookMethodByOffset:function (moduleName, offset, cmds) {
         // 获取目标函数的绝对地址
-        let func_addr = getFuncAddr(moduleName, offset);
+        let func_addr = obj.method.getFuncAddr(moduleName, offset);
         Interceptor.attach(ptr(func_addr), {
             onEnter: function (args) {
                 send("\n================================");
@@ -334,9 +334,9 @@ const obj = {
  */
 function printObj(obj){
     if (typeof obj === 'function')
-        send(obj.toString())
+        send(obj.toString());
     else{
-        send(Object.keys(obj))
+        send(Object.keys(obj));
     }
 }
 
@@ -348,9 +348,9 @@ function handleExec(data){
     try{
         send(eval(data));
     }catch(ex){
-        send(ex)
+        send(ex);
     }
-    recv(handleExec)
+    recv(handleExec);
 }
 
 recv(handleExec)
