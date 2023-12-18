@@ -8,7 +8,7 @@ import uuid
 import json
 import sys
 import frida
-import difflib
+# import difflib
 
 # Configuring logger to write to a file
 logging.basicConfig(level=logging.INFO, filename=f'ftool-{time.time()}.log', filemode='w',
@@ -177,7 +177,7 @@ class FToolUrwid:
         if len(matches) == 1:
             self.input_edit.edit_text = matches[0]
             # 光标移动到最后
-            self.input_edit.set_edit_pos(len(common_prefix))
+            self.input_edit.set_edit_pos(len(matches[0]))
         elif len(matches) > 1:
             common_prefix = os.path.commonprefix(matches)
             if common_prefix:
