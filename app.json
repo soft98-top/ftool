@@ -1,0 +1,6 @@
+{
+    "surge":{
+        "app":"Surge",
+        "jsf":"@BASE/code/surge.js"
+    }
+}

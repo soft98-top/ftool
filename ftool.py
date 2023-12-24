@@ -199,14 +199,14 @@ class FToolUrwid:
             AUTO_DATA[CURRENT_CMD] = options
 
     def execute_command(self, command_text):
-        global CMD_CENTER,CURRENT,HISTORY
+        global CMD_CENTER,CURRENT,HISTORY,BASE_PATH
         command_parse = command_text.split(":")
         command = command_parse[0]
         command_args = ""
         if len(command_parse) > 1:
             command_args = command_parse[1]
         basic_cmd = ['t','b','clear']
-        special_cmd = ['hook','set','exec','execf']
+        special_cmd = ['hook','set','exec','execf','app']
         self.command_add_history(command_text)
         if command not in basic_cmd:
             self.output_console(f"Command: {command_text}")  # Logging command input
@@ -263,6 +263,16 @@ class FToolUrwid:
                         CMD_CENTER[client_id] = cmd_code
                     except Exception as ex:
                         self.output_console(str(ex))
+            elif command == "app":
+                app_data = json.loads(open('app.json','r').read())
+                app_info = app_data.get(command_args,{})
+                if app_info == {}:
+                    return
+                else:
+                    app_name = app_info["app"]
+                    init_script = app_info["jsf"].replace("@BASE/",BASE_PATH)
+                    frida_client = FridaCLient(app_name,False,True,self,init_script)
+                    threading.Thread(target=frida_client.start).start()
         
 
     def output_console(self, output_text):
