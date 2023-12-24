@@ -27,7 +27,7 @@ TOTAL_HISTORY = urwid.SimpleListWalker([])
 HISTORY = urwid.SimpleListWalker([])
 OUTPUT = urwid.SimpleListWalker([])
 LOCK1 = threading.Lock()
-CURRENT_CMD = ""
+CURRENT_CMD = "$"
 AUTO_JSON = BASE_PATH + "auto.json"
 AUTO_DATA = {}
 
@@ -167,8 +167,9 @@ class FToolUrwid:
             self.autocomplete_command(input)
     
     def autocomplete_command(self, input):
-        if CURRENT_CMD == "":
-            return
+        global CURRENT_CMD
+        # if CURRENT_CMD == "":
+        #     return
         options = AUTO_DATA.get(CURRENT_CMD,[])
         if len(options) == 0:
             return
@@ -187,6 +188,15 @@ class FToolUrwid:
                 self.input_edit.edit_text = common_prefix
                 # 光标移动到最后
                 self.input_edit.set_edit_pos(len(common_prefix))
+    
+    def command_add_history(self, command):
+        global CURRENT_CMD
+        # if CURRENT_CMD == "":
+        #     return
+        options = AUTO_DATA.get(CURRENT_CMD,[])
+        if command not in options:
+            options.append(command)
+            AUTO_DATA[CURRENT_CMD] = options
 
     def execute_command(self, command_text):
         global CMD_CENTER,CURRENT,HISTORY
@@ -197,6 +207,7 @@ class FToolUrwid:
             command_args = command_parse[1]
         basic_cmd = ['t','b','clear']
         special_cmd = ['hook','set','exec','execf']
+        self.command_add_history(command_text)
         if command not in basic_cmd:
             self.output_console(f"Command: {command_text}")  # Logging command input
         if command in basic_cmd:
