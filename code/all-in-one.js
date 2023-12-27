@@ -2,8 +2,8 @@
  * all-in-one 包含所有常用函数
  * 作者：Soft98
  * 日期：2023-04-03
- * Update： 2023-12-08
- * 版本：1.0.4
+ * Update： 2023-12-27
+ * 版本：1.0.5
  */
 
 const obj_enum = {
@@ -184,30 +184,25 @@ const obj_method = {
             // 接受可变参数
             onEnter: function (args) {
                 send("====onEnter=====");
-                // let index = 0;
-                // console.log(args,arg2);
-                // send(hexdump(ptr(args), {
-                //     length: 64,
-                //     header: true,
-                //     ansi: true
-                // }));
-                // send("args: " + args + arg2);
-                // for (let arg of args) {
-                //     send("arg" + String(index) + ": " + arg);
-                //     send(hexdump(ptr(arg), {
-                //         length: 64,
-                //         header: false,
-                //         ansi: false
-                //     }));
-                // }
+                for (let index = 0; index < this.context.argc; index++) {
+                    let arg = args[index];
+                    send("arg" + index + ": " + arg);
+                    send(hexdump(ptr(arg), {
+                        length: 64,
+                        header: false,
+                        ansi: false
+                    }));
+                }
             },
             onLeave: function (retval) {
                 send("====onLeave=====");
                 send("retval: " + retval);
+                let ob1 = ObjC.Object(retval);
+                send("retval_objc: " + ob1.toString());
                 // send(hexdump(ptr(retval), {
                 //     length: 64,
-                //     header: true,
-                //     ansi: true
+                //     header: false,
+                //     ansi: false
                 // }));
             }
         });
