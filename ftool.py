@@ -265,6 +265,7 @@ class FToolUrwid:
                         self.output_console(str(ex))
             elif command == "app":
                 app_data = json.loads(open('app.json','r').read())
+                app_key = command_args.lower();
                 app_info = app_data.get(command_args,{})
                 if app_info == {}:
                     return
