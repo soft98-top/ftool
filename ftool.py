@@ -210,6 +210,12 @@ class FToolUrwid:
         self.command_add_history(command_text)
         if command not in basic_cmd:
             self.output_console(f"Command: {command_text}")  # Logging command input
+        if command == "exit":
+            if CURRENT_CMD == "exec":
+                command = "exec"
+                command_args = "exit"
+            else:
+                os._exit(0)
         if command in basic_cmd:
             out_index = self.out_index
             if command_text == "t":
@@ -224,8 +230,6 @@ class FToolUrwid:
         elif command == "list":
             output_text = json.dumps(CMD_CENTER)
             self.output_console(output_text)
-        elif command == "exit":
-            os._exit(0)
         elif command in special_cmd and command_args == "":
             self.change_cmd(command)
             return
@@ -266,7 +270,7 @@ class FToolUrwid:
             elif command == "app":
                 app_data = json.loads(open('app.json','r').read())
                 app_key = command_args.lower();
-                app_info = app_data.get(command_args,{})
+                app_info = app_data.get(app_key,{})
                 if app_info == {}:
                     return
                 else:
