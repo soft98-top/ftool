@@ -14,6 +14,7 @@
         "obj.method.hookMethodByOffset(moduleName, offset, cmds)",
         "obj.method.getAllMethodsInfo(className)",
         "obj.util.jsonToObjc(data)",
-        "obj.util.funcToString(func)"
+        "obj.util.funcToString(func)",
+        "obj.util.getVersion()"
     ]
 }

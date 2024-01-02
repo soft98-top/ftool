@@ -2,8 +2,8 @@
  * all-in-one 包含所有常用函数
  * 作者：Soft98
  * 日期：2023-04-03
- * Update： 2023-12-27
- * 版本：1.0.5
+ * Update： 2024-01-02
+ * 版本：1.0.6
  */
 
 const obj_enum = {
@@ -314,6 +314,15 @@ const obj_util = {
         let matches = func_str.match(regex);
         let extractedCode = matches[1];
         return extractedCode;
+    },
+     /**
+     * 软件版本获取
+     * @returns {string} - 软件版本
+     */
+     getVersion:function () {
+        let key = ObjC.classes.NSString.stringWithString_("CFBundleShortVersionString");
+        let version = ObjC.classes.NSBundle.mainBundle().infoDictionary().valueForKey_(key).toString();
+        return version;
     },
 }
 
