@@ -7,7 +7,7 @@ a simple frida tool for mac
 
 `python/python3 ftool.py`
 
-![image-20231130105111336](assets/image-20231130105111336.png)
+![image-20240102091412213](assets/image-20240102091412213.png)
 
 ## 0x02 命令
 
@@ -17,11 +17,12 @@ a simple frida tool for mac
 
 - `t`开头
 - `b`结尾
-- `exit`退出
+- `exit`退出，如果当前在exec命令空间下，会执行frida进程的退出
 - `⬆up`上一个
 - `⬇down`下一个
 - `PageUP`按键，上一页
 - `PageDOWN`按键，下一页
+- `tab`按键，自动补齐，包含历史命令补齐，自动补齐需要在auto.json中配置
 
 Frida操作命令
 
@@ -31,10 +32,14 @@ Frida操作命令
 - `set:<client_id>`设置当前命令执行客户端，client_id可以通过`list`获取
 - `exec:<cmd>`对当前frida客户端进行执行js代码，如果cmd为`exit`，frida客户端会退出
 - `execf:<js_file>`对frida客户端进行执行指定文件中的js代码
+- `app:<target>`对app.json中配置的应用进行快速执行js代码，相当于`hook:<app>,<jsfile>`
 
-![iShot_2023-11-30_11.29.10](assets/iShot_2023-11-30_11.29.10.gif)
+![iShot_2024-01-02_09.31.52](assets/iShot_2024-01-02_09.31.52.gif)
 
 ## 0x03 已知问题
 
-- 显示区域无法使用滚轮
+- ~~显示区域无法使用滚轮~~
+  - 使用按键代替
 - 显示内容过宽无法自动换行
+- 显示内容无法复制
+- frida进程切换不人性化
