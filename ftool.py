@@ -206,7 +206,7 @@ class FToolUrwid:
         if len(command_parse) > 1:
             command_args = command_parse[1]
         basic_cmd = ['t','b','clear']
-        special_cmd = ['hook','set','exec','execf','app']
+        special_cmd = ['hook','set','exec','execf','app','$']
         self.command_add_history(command_text)
         if command not in basic_cmd:
             self.output_console(f"Command: {command_text}")  # Logging command input
@@ -301,7 +301,7 @@ class FToolUrwid:
         global CURRENT_CMD
         CURRENT_CMD = cmd
         caption = "Command: "
-        if cmd != "":
+        if cmd != "$":
             caption = f"Command({cmd}): "
         # 修改caption
         self.input_edit.set_caption(caption)
