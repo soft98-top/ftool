@@ -34,7 +34,11 @@ AUTO_DATA = {}
 class FridaCLient():
 
     def __init__(self,target,repeat=False,auto=False,out=None,init_script=None):
-        self.target = target
+        target_split = target.split("#")
+        self.target = target_split[0]
+        self.attach = target_split[0]
+        if len(target_split) > 1 and target_split[1] != '':
+            self.attach = target_split[1]
         self.repeat = repeat
         self.auto = auto
         self.out = out
@@ -65,9 +69,9 @@ class FridaCLient():
         global CMD_CENTER,CURRENT
         target = None
         try:
-            target = int(self.target)
+            target = int(self.attach)
         except:
-            target = self.target
+            target = self.attach
         while True:
             try:
                 session = frida.attach(target)
