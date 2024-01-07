@@ -1,5 +1,8 @@
 {
     "exec": [
+        "obj.enum.enumClasses()",
+        "obj.enum.enumOwnMethods(className)",
+        "obj.enum.enumAllMethods(className)",
         "obj.enum.enumMethods(className)",
         "obj.enum.enumModules()",
         "obj.enum.enumExports(moduleName)",

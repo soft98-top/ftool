@@ -2,23 +2,61 @@
  * all-in-one 包含所有常用函数
  * 作者：Soft98
  * 日期：2023-04-03
- * Update： 2024-01-02
- * 版本：1.0.6
+ * Update： 2024-01-07
+ * 版本：1.0.7
  */
 
 const obj_enum = {
+    /**
+     * 枚举所有类
+     */
+    enumClasses: function() {
+        let hookClasses = ObjC.classes;
+        let allClasses = Object.keys(hookClasses);
+        let return_str = "";
+        return_str += `==allClasses==\n`;
+        for (var i = 0; i < allClasses.length; i++){
+            let cur_class = allClasses[i];
+            return_str += `${cur_class} ${JSON.stringify(hookClasses[cur_class])}\n`;
+        }
+        send(return_str);
+    },
+    /**
+     * 枚举对象自有方法
+     * @param {string} className - 类名
+     */
+    enumOwnMethods: function (className) {
+        // 枚举对象的方法
+        let hookOwnMethods = ObjC.classes[className].$ownMethods;
+        let return_str = "";
+        return_str += `==${className} ownMethods==\n`;
+        for (var i = 0; i < hookOwnMethods.length; i++){
+            return_str += `${className} ${hookOwnMethods[i]}\n`;
+        }
+        send(return_str);
+    },
+    /**
+     * 枚举对象的所有方法
+     * @param {string} className - 类名
+     */
+    enumAllMethods: function (className) {
+        // 枚举对象的方法
+        let hookAllMethods = ObjC.classes[className].$methods;
+        let return_str = "";
+        return_str += `==${className} allMethods==\n`;
+        for (var i = 0; i < hookAllMethods.length; i++){
+            return_str += `${className} ${hookAllMethods[i]}\n`;
+        }
+        send(return_str);
+    },
     /**
      * 枚举对象的方法
      * @param {string} className - 类名
      */
     enumMethods: function (className) {
         // 枚举对象的方法
-        let hookOwnMethods = ObjC.classes[className].$ownMethods;
-        let hookAllMethods = ObjC.classes[className].$methods;
-        let hookClasses = ObjC.classes;
-        send("ownMethods: " + JSON.stringify(hookOwnMethods));
-        send("methods: " + JSON.stringify(hookAllMethods));
-        send("allClasses: " + JSON.stringify(hookClasses));
+        this.enumOwnMethods(className);
+        this.enumAllMethods(className);
     },
     /**
      * 枚举模块
