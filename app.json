@@ -2,5 +2,13 @@
     "surge":{
         "app":"Surge",
         "jsf":"@BASE/code/surge.js"
+    },
+    "irightmouse":{
+        "app":"/Applications/iRightMouse.app,超级右键",
+        "jsf":"@BASE/code/receipt.js"
+    },
+    "ishot":{
+        "app":"iShot",
+        "jsf":"@BASE/code/receipt.js"
     }
 }
