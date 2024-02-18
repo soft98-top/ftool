@@ -31,7 +31,7 @@ CURRENT_CMD = "$"
 AUTO_JSON = BASE_PATH + "auto.json"
 AUTO_DATA = {}
 
-class FridaCLient():
+class FridaClient():
 
     def __init__(self,target,repeat=False,auto=False,out=None,init_script=None):
         target_split = target.split("#")
@@ -174,33 +174,55 @@ class FToolUrwid:
         global CURRENT_CMD
         # if CURRENT_CMD == "":
         #     return
-        options = AUTO_DATA.get(CURRENT_CMD,[])
+        special_cmd = ['hook','set','exec','execf','app','$']
+        space = CURRENT_CMD
+        command_parse = input.split(":")
+        if command_parse[0] in special_cmd:
+            space = command_parse[0]
+            input = "".join(command_parse[1:])
+        options = AUTO_DATA.get(space,[])
         if len(options) == 0:
             return
         # matches = difflib.get_close_matches(input, options, cutoff=0.3, n=len(options))
         matches = [cmd for cmd in options if cmd.startswith(input)]
         if len(matches) == 1:
-            self.input_edit.edit_text = matches[0]
+            out_match = matches[0]
+            if space != CURRENT_CMD:
+                out_match = space + ":" + out_match
+            self.input_edit.edit_text = out_match
             # 光标移动到最后
-            self.input_edit.set_edit_pos(len(matches[0]))
+            self.input_edit.set_edit_pos(len(out_match))
         elif len(matches) > 1:
             common_prefix = os.path.commonprefix(matches)
+            out_match = common_prefix
+            if space != CURRENT_CMD:
+                out_match = space + ":" + out_match
             if common_prefix:
                 if common_prefix == input:
-                    self.output_console("\n".join(matches))
+                    out_matches = matches
+                    if space != CURRENT_CMD:
+                        # 给matches中每个matche增加前缀
+                        out_matches = ["{}:{}".format(space,match) for match in matches]
+                    self.output_console("\n".join(out_matches))
                     return
-                self.input_edit.edit_text = common_prefix
+                self.input_edit.edit_text = out_match
                 # 光标移动到最后
-                self.input_edit.set_edit_pos(len(common_prefix))
+                self.input_edit.set_edit_pos(len(out_match))
     
     def command_add_history(self, command):
         global CURRENT_CMD
         # if CURRENT_CMD == "":
         #     return
-        options = AUTO_DATA.get(CURRENT_CMD,[])
+        special_cmd = ['hook','set','exec','execf','app','$']
+        space = CURRENT_CMD
+        command_parse = command.split(":")
+        if command_parse[0] in special_cmd:
+            space = command_parse[0]
+            command = "".join(command_parse[1:])
+        options = AUTO_DATA.get(space,[])
         if command not in options:
             options.append(command)
-            AUTO_DATA[CURRENT_CMD] = options
+            AUTO_DATA[space] = options
 
     def execute_command(self, command_text):
         global CMD_CENTER,CURRENT,HISTORY,BASE_PATH
@@ -238,7 +260,7 @@ class FToolUrwid:
             self.change_cmd(command)
             return
         else:
-            if command_args == "":
+            if command not in special_cmd:
                 command = CURRENT_CMD
                 command_args = command_text
             if command == "hook":
@@ -247,7 +269,7 @@ class FToolUrwid:
                 init_script = None
                 if len(args) > 1:
                     init_script = args[1]
-                frida_client = FridaCLient(app_name,False,True,self,init_script)
+                frida_client = FridaClient(app_name,False,True,self,init_script)
                 threading.Thread(target=frida_client.start).start()
             elif command == "set":
                 client_id = command_args
@@ -280,7 +302,7 @@ class FToolUrwid:
                 else:
                     app_name = app_info["app"]
                     init_script = app_info["jsf"].replace("@BASE/",BASE_PATH)
-                    frida_client = FridaCLient(app_name,False,True,self,init_script)
+                    frida_client = FridaClient(app_name,False,True,self,init_script)
                     threading.Thread(target=frida_client.start).start()
         
 
