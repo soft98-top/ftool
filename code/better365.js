@@ -11,7 +11,11 @@ let better365_crack = function () {
           ]
         }
       }
-    let crack_data = obj.util.jsonToObjc(json_data)
+    let crack_data = jsonToObjc(json_data)
     retval.replace(crack_data);
 }
-obj.method.hookMethod("NSJSONSerialization","+ JSONObjectWithData:options:error:",{"onLeave":obj.util.funcToString(func_better365)});
+try{
+  hookMethod("NSJSONSerialization","+ JSONObjectWithData:options:error:",{"onLeave":funcToString(better365_crack)});
+}catch (ex){
+  send(ex.toString())
+}

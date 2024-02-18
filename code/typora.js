@@ -8,10 +8,10 @@ let typora_crack = function () {
             "license":"XXXXXX-XXXXXX-XXXXXX-XXXXXX"
         }
     }
-    let crack_data = obj.util.jsonToObjc(json_data);
+    let crack_data = jsonToObjc(json_data);
     retval.replace(crack_data);
 }
-obj.method.hookMethod("LicenseManager","- verifySig:",{"onLeave":retval_to_1});
-obj.method.hookMethod("LicenseManager","- validateEmail:",{"onLeave":retval_to_1});
-obj.method.hookMethod("LicenseManager","- quickValidateLicense:",{"onLeave":retval_to_1});
-obj.method.hookMethod("Utils","- jsonStringToObject:",{"onLeave":obj.util.funcToString(typora_crack)});
+hookMethod("LicenseManager","- verifySig:",{"onLeave":retval_to_1});
+hookMethod("LicenseManager","- validateEmail:",{"onLeave":retval_to_1});
+hookMethod("LicenseManager","- quickValidateLicense:",{"onLeave":retval_to_1});
+hookMethod("Utils","- jsonStringToObject:",{"onLeave":funcToString(typora_crack)});
