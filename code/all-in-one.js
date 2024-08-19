@@ -426,6 +426,7 @@ var funcToString = function (func) {
     let extractedCode = matches[1];
     return extractedCode;
 }
+
 /**
  * 软件版本获取
  * @returns {string} - 软件版本
@@ -436,6 +437,17 @@ var getVersion = function () {
     return version;
 }
 
+/**
+ * 软件架构获取
+ */
+var getArch = function () {
+    let arch = Process.arch;
+    if (arch == undefined || arch == ""){
+        return "x86_64"
+    }else{
+        return arch
+    }
+}
 
 /**
  * 打印对象或函数
